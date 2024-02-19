@@ -1,28 +1,32 @@
-import { FiUser, FiLogOut } from 'react-icons/fi';
+import { FiUser, FiLogOut } from "react-icons/fi";
 
-import { useAuth } from '../../hooks/auth';
-
-import { Container, User } from './styles';
+import { useAuth } from "../../hooks/auth";
+import { Container, User } from "./styles";
+import { capitalizeText } from "../../utils/capitalize-text";
 
 export function Header() {
-    const { signOut, user } = useAuth();
+  const { signOut, user } = useAuth();
 
-    return (
-        <Container>
-            <h1>Menu</h1>
+  const role = capitalizeText(user.role);
 
-            <aside>
-                <User>
-                    <span>Olá, <strong>{user.name}</strong></span>
-                    <small>
-                        <FiUser /> Perfil do usuário
-                    </small>
-                </User>
-            </aside>
+  return (
+    <Container>
+      <h1>Menu</h1>
 
-            <button type="button" onClick={signOut}>
-                <FiLogOut size={24} />
-            </button>
-        </Container>
-    );
-};
+      <aside>
+        <User>
+          <span>
+            Olá, <strong>{user.name}</strong>
+          </span>
+          <small>
+            <FiUser /> Perfil de {role}
+          </small>
+        </User>
+      </aside>
+
+      <button type="button" onClick={signOut}>
+        <FiLogOut size={24} />
+      </button>
+    </Container>
+  );
+}

@@ -14,16 +14,18 @@ function AuthProvider({ children }) {
 
   async function signIn({ email, password }) {
     try {
-      const response = await api.post("sessions", { email, password });
-      const { token, user } = response.data;
+      const responseToken = await api.post("sessions", { email, password });
+      const { token } = responseToken.data;
+
+      localStorage.setItem("@estock:token", token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      const response = await api.get("/users/profile")
+      const { user } = response.data;
 
       localStorage.setItem("@estock:user", JSON.stringify(user));
-      localStorage.setItem("@estock:token", token);
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
+      
       setData({ token, user });
-
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message);

@@ -18,6 +18,18 @@ class UsersController {
 
     return response.status(201).json();
   }
+
+  async index(request, response) {
+    const { id } = request.user
+
+    const user = await knex("users").where('id', id).first();
+
+    delete user.password
+
+    return response.json({
+      user,
+    })
+  }
 }
 
 module.exports = UsersController;

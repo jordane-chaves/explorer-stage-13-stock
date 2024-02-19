@@ -1,11 +1,26 @@
-exports.up = knex => knex.schema.createTable("users", table => {
-  table.increments("id");
-  table.text("name").notNullable();
-  table.text("email").notNullable();
-  table.text("password").notNullable();
+/**
+ * @param {import('knex').Knex} knex
+ */
+exports.up = (knex) =>
+  knex.schema.createTable("users", (table) => {
+    table.increments("id");
+    table.text("name").notNullable();
+    table.text("email").notNullable();
+    table.text("password").notNullable();
 
-  table.timestamp("created_at").default(knex.fn.now());
-  table.timestamp("updated_at").default(knex.fn.now());
-});
+    table
+      .enum("role", ["admin", "customer", "sale"], {
+        useNative: true,
+        enumName: "roles",
+      })
+      .notNullable()
+      .defaultTo("customer");
 
-exports.down = knex => knex.schema.dropTable("users");
+    table.timestamp("created_at").default(knex.fn.now());
+    table.timestamp("updated_at").default(knex.fn.now());
+  });
+
+/**
+ * @param {import('knex').Knex} knex
+ */
+exports.down = (knex) => knex.schema.dropTable("users");

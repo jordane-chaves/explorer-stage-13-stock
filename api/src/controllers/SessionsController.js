@@ -1,10 +1,15 @@
 const { compare } = require("bcryptjs");
 const { sign } = require("jsonwebtoken");
+
 const knex = require("../database/knex");
 const authConfig = require("../configs/auth");
 const AppError = require("../utils/AppError");
 
 class SessionsController {
+  /**
+   * @param {import('express').Request} request
+   * @param {import('express').Response} response
+   */
   async create(request, response) {
     const { email, password } = request.body;
 
@@ -24,10 +29,32 @@ class SessionsController {
 
     const token = sign({ role: user.role }, secret, {
       subject: String(user.id),
-      expiresIn
+      expiresIn,
     });
 
-    response.status(201).json({ token });
+    return response
+      .cookie("token", token, {
+        path: "/",
+        secure: true,
+        sameSite: true,
+        httpOnly: true,
+        maxAge: 1000 * 60 * 15, // 15 min
+      })
+      .send();
+  }
+
+  /**
+   * @param {import('express').Request} request
+   * @param {import('express').Response} response
+   */
+  async delete(request, response) {
+    return response
+      .cookie("token", "", {
+        httpOnly: true,
+        secure: true,
+        maxAge: 1000 * 2, // 2 seconds
+      })
+      .send();
   }
 }
 

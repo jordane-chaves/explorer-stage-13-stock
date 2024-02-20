@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect
-} from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext({});
 
@@ -12,20 +7,44 @@ import { api } from "../services/api";
 function AuthProvider({ children }) {
   const [data, setData] = useState({});
 
-  async function signIn({ email, password }) {
+  async function getProfile() {
     try {
-      const responseToken = await api.post("sessions", { email, password });
-      const { token } = responseToken.data;
+      const response = await api.get("/users/profile", {
+        withCredentials: true,
+      });
 
-      localStorage.setItem("@estock:token", token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      const response = await api.get("/users/profile")
       const { user } = response.data;
 
-      localStorage.setItem("@estock:user", JSON.stringify(user));
-      
-      setData({ token, user });
+      return { user };
+    } catch (error) {
+      if (error.response) {
+        alert(error.response.data.message)
+
+        if (error.response.status === 401) {
+          signOut();
+        }
+      }
+    }
+  }
+
+  async function signIn({ email, password }) {
+    try {
+      await api.post(
+        "sessions",
+        { email, password },
+        {
+          withCredentials: true,
+        }
+      );
+
+      const response = await getProfile();
+
+      if (response?.user) {
+        const { user } = response;
+
+        localStorage.setItem("@estock:user", JSON.stringify(user));
+        setData({ user });
+      }
     } catch (error) {
       if (error.response) {
         alert(error.response.data.message);
@@ -33,39 +52,42 @@ function AuthProvider({ children }) {
         alert("Não foi possível entrar.");
       }
     }
-  };
+  }
 
-  function signOut() {
-    localStorage.removeItem("@estock:token");
+  async function signOut() {
+    await api.post('/sessions/logout', {}, { withCredentials: true });
+
     localStorage.removeItem("@estock:user");
 
     setData({});
   }
 
-
   useEffect(() => {
-    const token = localStorage.getItem("@estock:token");
     const user = localStorage.getItem("@estock:user");
 
-    if (token && user) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    if (user) {
+      getProfile().then((response) => {
+        if (response?.user) {
+          const { user } = response;
 
-      setData({
-        token,
-        user: JSON.parse(user)
+          localStorage.setItem("@estock:user", JSON.stringify(user));
+          setData({ user });
+        }
       });
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{
-      signIn,
-      signOut,
-      user: data.user
-    }}>
+    <AuthContext.Provider
+      value={{
+        signIn,
+        signOut,
+        user: data.user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 function useAuth() {

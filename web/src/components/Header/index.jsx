@@ -7,7 +7,7 @@ import { capitalizeText } from "../../utils/capitalize-text";
 export function Header() {
   const { signOut, user } = useAuth();
 
-  const role = capitalizeText(user.role);
+  const role = user.role ?? capitalizeText(user.role);
 
   return (
     <Container>
